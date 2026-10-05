@@ -47,7 +47,8 @@ jobs:
       - name: Deploy to S3
         run: |
           echo "Uploading to S3..."
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} --delete
+          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} \
+          --delete
         # sync = upload new/changed files; --delete removes old files in bucket not in dist
 
       # --- CloudFront invalidation ---
