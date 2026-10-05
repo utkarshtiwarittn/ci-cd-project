@@ -37,11 +37,8 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy to S3
+        env:
+            S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
-          echo "Uploading to S3..."
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} --delete
-
-      - name: Invalidate CloudFront cache
-        run: |
-          echo "Invalidating CloudFront..."
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+            BUCKET=$(printf '%s' "$S3_BUCKET" | tr -d '\n\r')
+            aws s3 sync dist/ "s3://${BUCKET}/" --delete
