@@ -1,22 +1,18 @@
 name: Deploy to AWS
 
-# When does this run?
 on:
   push:
     branches:
-      - main   # only when you push to main
+      - main
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest   # GitHub provides a fresh Linux VM
+    runs-on: ubuntu-latest
 
     steps:
-      # --- Checkout ---
       - name: Checkout code
         uses: actions/checkout@v4
-        # Downloads your repo into the runner
 
-      # --- TEST ---
       - name: Test
         run: |
           echo "Running tests..."
@@ -24,18 +20,15 @@ jobs:
           grep -q "DevOps Training" index.html
           echo "Tests passed."
 
-      # --- BUILD / PACKAGE ---
       - name: Build / Package
         run: |
           echo "Packaging site..."
           mkdir -p dist
           cp index.html dist/
-          # Copy optional files if they exist (won't fail if missing)
           cp style.css dist/ 2>/dev/null || true
           cp script.js dist/ 2>/dev/null || true
           ls -la dist/
 
-      # --- AWS credentials ---
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -43,19 +36,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # --- DEPLOY to S3 ---
       - name: Deploy to S3
         run: |
           echo "Uploading to S3..."
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} \
-          --delete
-        # sync = upload new/changed files; --delete removes old files in bucket not in dist
+          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} --delete
 
-      # --- CloudFront invalidation ---
       - name: Invalidate CloudFront cache
         run: |
           echo "Invalidating CloudFront..."
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
-        # /* = refresh all cached paths so v2.0 shows immediately
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
