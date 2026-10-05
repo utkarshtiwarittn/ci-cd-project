@@ -36,29 +36,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # - name: Deploy to S3
-      #   env:
-      #       S3_BUCKET: ${{ secrets.S3_BUCKET }}
-      #   run: |
-      #       BUCKET=$(printf '%s' "$S3_BUCKET" | tr -d '\n\r')
-      #       aws s3 sync dist/ "s3://${BUCKET}/" --delete
-      - name: Debug AWS step by step
+      - name: Deploy to S3
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
-          set -e
           BUCKET=$(printf '%s' "$S3_BUCKET" | tr -d '\n\r' | xargs)
-          echo "AWS_REGION=$AWS_REGION"
-          echo "Bucket length=${#BUCKET}"
-      
-          echo "=== 1) Who am I? ==="
-          aws sts get-caller-identity
-      
-          echo "=== 2) Can I list ALL my buckets? ==="
-          aws s3 ls || echo "FAILED: s3:ListAllMyBuckets (or no buckets)"
-      
-          echo "=== 3) Does this bucket exist for me? ==="
-          aws s3api head-bucket --bucket "$BUCKET" || echo "FAILED: head-bucket (wrong name, wrong account, or no permission)"
-      
-          echo "=== 4) Can I list objects in this bucket? ==="
-          aws s3 ls "s3://${BUCKET}/" || echo "FAILED: ListObjectsV2 (your current error)"
+          echo "Uploading to S3..."
+          aws s3 sync dist/ "s3://${BUCKET}/" --delete
